@@ -29,7 +29,6 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea {
   width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px;
 }
 
-/* === 단일 선택 버튼(라디오) 그룹 === */
 .radio-group { display: flex; gap: 10px; }
 .radio-group input[type="radio"] { display: none; }
 .radio-group label {
@@ -42,7 +41,6 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea {
 }
 .radio-group input[type="radio"]:disabled + label { opacity: 0.6; cursor: not-allowed; }
 
-/* === 다중 선택 버튼(체크박스) 그룹 === */
 .multi-btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
 .multi-btn-group input[type="checkbox"] { display: none; }
 .multi-btn-group label {
@@ -51,7 +49,7 @@ input[type="text"], input[type="date"], input[type="number"], select, textarea {
   color: #333; cursor: pointer; transition: all 0.2s;
 }
 .multi-btn-group input[type="checkbox"]:checked + label {
-  background: #34c759; color: #fff; /* 다중 선택은 초록색으로 구분 */
+  background: #34c759; color: #fff; 
 }
 .multi-btn-group input[type="checkbox"]:disabled + label { opacity: 0.6; cursor: not-allowed; }
 
@@ -71,7 +69,7 @@ button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 16
 .btn-secondary { background-color: #e5e5ea; color: #000; } 
 .btn-edit { background-color: #34c759; color: white; } 
 .btn-delete { background-color: #ff3b30; color: white; } 
-.btn-small { flex: none; padding: 6px 12px; font-size: 14px; }
+.btn-small { flex: none; padding: 6px 12px; font-size: 14px; border-radius: 6px; }
 .btn-text { background: none; color: #007aff; padding: 0; flex: none; }
 
 .tab-bar {
@@ -91,8 +89,18 @@ button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 16
   background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column; cursor: pointer;
 }
-.list-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold;}
-.list-item-body { color: #666; font-size: 14px; }
+.list-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-weight: bold;}
+.list-item-body { color: #666; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;}
+
+.badge {
+  display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #fff; margin-right: 5px;
+}
+.badge-adr-y { background-color: #ff3b30; } 
+.badge-adr-n { background-color: #8e8e93; } 
+.badge-res-cancer { background-color: #ff9500; } 
+.badge-res-adenoma { background-color: #34c759; } 
+.badge-res-pending { background-color: #ff3b30; } 
+
 
 .full-screen {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;

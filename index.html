@@ -101,13 +101,17 @@
         <button type="button" id="btn-reset" class="btn-secondary">초기화</button>
         <button type="button" id="btn-submit" class="btn-primary">완료</button>
       </div>
+      
+      <!-- 입력 탭 하단 엑셀 버튼 추가 -->
+      <div class="button-group" style="margin-top: 15px;">
+        <button type="button" id="btn-export-excel-input" class="btn-edit" style="background-color: #ff9500;">전체 데이터 엑셀 전송</button>
+      </div>
     </form>
   </div>
 
   <!-- 목록 탭 화면 -->
   <div id="view-list" class="view">
     <div class="header-action">
-      <!-- ADR 수치를 보여줄 공간 추가 -->
       <div style="display: flex; align-items: baseline; gap: 10px;">
         <h2>목록</h2>
         <span id="adr-display" style="font-weight: 700; color: #ff3b30; font-size: 16px;">ADR --%</span>
@@ -123,8 +127,13 @@
     <div id="list-container" class="list-container"></div>
   </div>
 
+  <!-- 휴지통 탭 화면 -->
   <div id="view-trash" class="view">
-    <h2>휴지통</h2>
+    <div class="header-action">
+      <h2>휴지통</h2>
+      <!-- 휴지통 비우기 버튼 추가 -->
+      <button id="btn-empty-trash" class="btn-small" style="background-color: #ff3b30; color: white; border: none;">비우기</button>
+    </div>
     <div class="sort-bar" id="trash-sort-bar">
       <span class="sort-btn" data-sort="date">날짜 ▼</span>
       <span class="sort-btn" data-sort="name">이름</span>

@@ -130,6 +130,19 @@ function saveData() {
   localStorage.setItem('endoTrash', JSON.stringify(trash));
 }
 
+// === 휴지통 비우기 로직 추가 ===
+document.getElementById('btn-empty-trash').addEventListener('click', () => {
+  if (trash.length === 0) {
+    alert("휴지통이 이미 비어 있습니다.");
+    return;
+  }
+  showModal('휴지통을 비우시겠습니까?', () => {
+    trash = []; // 휴지통 데이터 초기화
+    saveData();
+    renderTrash();
+  });
+});
+
 document.querySelectorAll('#list-sort-bar .sort-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const key = btn.dataset.sort;
@@ -194,7 +207,6 @@ function renderList() {
   const container = document.getElementById('list-container');
   container.innerHTML = '';
 
-  // === ADR 실시간 계산 ===
   const adrTargetRecords = records.filter(r => r.adr === 'Y');
   let adrText = "ADR --%";
   
@@ -203,10 +215,9 @@ function renderList() {
       r.bxResult && (r.bxResult.includes('선종') || r.bxResult.includes('암'))
     );
     const adrRate = (adrPositiveRecords.length / adrTargetRecords.length) * 100;
-    adrText = `ADR ${adrRate.toFixed(1)}%`; // 소수점 첫째 자리까지 표시
+    adrText = `ADR ${adrRate.toFixed(1)}%`;
   }
   document.getElementById('adr-display').textContent = adrText;
-  // ======================
 
   const sortedRecords = sortData(records, listSort);
 
@@ -477,31 +488,53 @@ function setDetailButtons(source) {
   }
 }
 
-document.getElementById('btn-export-excel').addEventListener('click', () => {
+// === 공통 엑셀 다운로드 함수 ===
+function exportToExcel() {
   if (records.length === 0) {
     alert("내보낼 데이터가 없습니다.");
     return;
   }
   
   showModal('엑셀 파일로 저장/공유하시겠습니까?', () => {
-    const excelData = records.map(rec => ({
-      '날짜': rec.date,
-      '이름': rec.name,
-      '등록번호': rec.id,
-      '나이': rec.age,
-      '성별': rec.gender,
-      '진입성공': rec.success,
-      '진입시간': rec.time,
-      'ADR': rec.adr,
-      '조직검사': rec.bx.join(', '),
-      '결과': rec.bxResult.join(', ') + (rec.bxResult.includes('기타') ? ` (${rec.bxOtherTxt})` : ''),
-      '검사소견': rec.findings,
-      '비고': rec.note,
-      '최초입력': formatDateString(rec.createdAt),
-      '마지막수정': formatDateString(rec.updatedAt)
-    }));
+    const excelData = records.map(rec => {
+      const resultString = rec.bxResult.join(', ') + (rec.bxResult.includes('기타') ? ` (${rec.bxOtherTxt})` : '');
+      return {
+        '날짜': rec.date,
+        '이름': rec.name,
+        '등록번호': rec.id,
+        '나이': rec.age,
+        '성별': rec.gender,
+        '진입성공': rec.success,
+        '진입시간': rec.time,
+        'ADR': rec.adr,
+        '조직검사': rec.bx.join(', '),
+        '결과': resultString,
+        '검사소견': rec.findings,
+        '비고': rec.note,
+        '최초입력': formatDateString(rec.createdAt),
+        '마지막수정': formatDateString(rec.updatedAt)
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // 셀 순회하며 '암' 또는 '선종'이 포함된 경우 폰트 색상을 빨간색으로 변경
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = {c: C, r: R};
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        const cell = worksheet[cell_ref];
+
+        if (cell && cell.v) {
+          const val = cell.v.toString();
+          if (val.includes('암') || val.includes('선종')) {
+            cell.s = { font: { color: { rgb: "FF0000" } } };
+          }
+        }
+      }
+    }
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "내시경기록");
     
@@ -524,7 +557,11 @@ document.getElementById('btn-export-excel').addEventListener('click', () => {
       alert("엑셀 생성 중 오류가 발생했습니다: " + e.message);
     }
   });
-});
+}
+
+// 두 곳의 엑셀 버튼에 이벤트 리스너 연결
+document.getElementById('btn-export-excel').addEventListener('click', exportToExcel);
+document.getElementById('btn-export-excel-input').addEventListener('click', exportToExcel);
 
 updateSortUI('list-sort-bar', listSort);
 updateSortUI('trash-sort-bar', trashSort);
