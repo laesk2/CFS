@@ -8,7 +8,6 @@
 body {
   background-color: #f2f2f7; 
   color: #000;
-  /* 하단 탭바 높이 변경에 맞춰 여백 확보 (기존 70px -> 120px) */
   padding-bottom: 120px; 
 }
 
@@ -26,8 +25,22 @@ h2 { margin-bottom: 20px; font-size: 24px; font-weight: bold; }
 .form-group label {
   display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #333;
 }
+
+/* === 날짜 입력칸 삐져나옴 완벽 방지 === */
 input[type="text"], input[type="date"], input[type="number"], select, textarea {
-  width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px;
+  width: 100%; 
+  max-width: 100%; 
+  min-width: 0; /* 모바일 브라우저의 강제 최소 너비 해제 */
+  margin: 0; /* iOS 기본 마진 강제 제거 */
+  box-sizing: border-box; 
+  display: block; 
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 6px; 
+  font-size: 16px;
+  background-color: #fff;
+  -webkit-appearance: none; /* iOS Safari 특유의 둥근 테두리 및 여백 고질병 제거 */
+  appearance: none;
 }
 
 .radio-group { display: flex; gap: 10px; }
@@ -79,20 +92,22 @@ button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 16
   border-color: #007aff;
 }
 
-/* === 하단 탭 바 높이 조절 === */
+/* === 하단 탭 바 텍스트 위로 정렬 및 크기 확대 === */
 .tab-bar {
   position: fixed; bottom: 0; left: 0; width: 100%; 
-  /* 높이를 기존 60px에서 100px로 변경 */
   height: 100px; 
   background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
   display: flex; border-top: 1px solid #ddd; z-index: 100;
-  /* 버튼 텍스트가 위쪽으로 정렬되도록 조정 (너무 아래로 치우치지 않게) */
-  align-items: flex-start;
 }
 .tab-btn { 
-  flex: 1; background: none; border: none; border-radius: 0; color: #8e8e93; font-size: 16px; 
-  /* 버튼 클릭 영역과 텍스트 위치를 높이에 맞게 조정 */
-  height: 100%; padding-top: 15px; 
+  flex: 1; background: none; border: none; border-radius: 0; color: #8e8e93; 
+  font-size: 18px; /* 기존 16px에서 18px로 크기 키움 */
+  font-weight: 700; /* 글씨 굵게 처리 */
+  height: 100%; 
+  padding-top: 10px; /* 기존 15px에서 10px로 줄여 더 위로 올림 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* 텍스트를 완전히 위쪽으로 정렬 */
 }
 .tab-btn.active { color: #007aff; }
 
@@ -120,7 +135,6 @@ button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 16
 .full-screen {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: #f2f2f7; z-index: 200; overflow-y: auto; 
-  /* 상세 화면 스크롤 하단 여백 추가 */
   padding-bottom: 80px; 
 }
 .detail-header {
