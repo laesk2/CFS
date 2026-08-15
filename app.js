@@ -347,7 +347,8 @@ function renderDetailForm(record) {
   detailContentArea.innerHTML = `
     <div class="form-group"><label>날짜</label><input type="date" id="d-date" value="${record.date}" ${dis}></div>
     <div class="form-group"><label>이름</label><input type="text" id="d-name" value="${record.name}" ${dis}></div>
-    <div class="form-group"><label>등록번호</label><input type="number" id="d-id" value="${record.id}" ${dis}></div>
+    <!-- 아이폰 숫자 키패드 적용 부분 (상세/수정 화면) -->
+    <div class="form-group"><label>등록번호</label><input type="text" id="d-id" inputmode="numeric" pattern="[0-9]*" value="${record.id}" ${dis}></div>
     <div class="form-group"><label>나이</label><input type="number" id="d-age" value="${record.age}" ${dis}></div>
     <div class="form-group"><label>성별</label>
       <div class="radio-group">
