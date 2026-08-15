@@ -7,12 +7,16 @@ let trashSort = { key: 'date', order: 'desc' };
 let currentDetailId = null;
 let isEditMode = false;
 
-const modal = document.getElementById('modal-overlay');
-const modalMsg = document.getElementById('modal-msg');
-const btnYes = document.getElementById('modal-btn-yes');
-const btnNo = document.getElementById('modal-btn-no');
+let isAdrOnlyFilter = false;
 
+// === 모달 팝업창 버그 수정 ===
+// 모달 요소를 함수 내부에서 매번 새로 찾도록 변경하여 '예/아니요' 클릭 이벤트가 정상 작동하게 합니다.
 function showModal(message, onYes) {
+  const modal = document.getElementById('modal-overlay');
+  const modalMsg = document.getElementById('modal-msg');
+  const btnYes = document.getElementById('modal-btn-yes');
+  const btnNo = document.getElementById('modal-btn-no');
+
   modalMsg.textContent = message;
   modal.style.display = 'flex';
   
@@ -23,7 +27,7 @@ function showModal(message, onYes) {
   
   newYes.addEventListener('click', () => {
     modal.style.display = 'none';
-    onYes();
+    if (onYes) onYes();
   });
   
   newNo.addEventListener('click', () => {
@@ -83,6 +87,10 @@ document.getElementById('btn-submit').addEventListener('click', () => {
   const tMin = document.getElementById('i-time-min').value;
   const tSec = document.getElementById('i-time-sec').value;
   const formattedTime = (tMin || tSec) ? `${tMin || '0'}:${(tSec || '0').padStart(2, '0')}` : '';
+
+  const oMin = document.getElementById('i-obs-min').value;
+  const oSec = document.getElementById('i-obs-sec').value;
+  const formattedObsTime = (oMin || oSec) ? `${oMin || '0'}:${(oSec || '0').padStart(2, '0')}` : '';
   
   const bxSelected = Array.from(document.querySelectorAll('input[name="i-bx"]:checked')).map(el => el.value);
   const resultSelected = Array.from(document.querySelectorAll('input[name="i-bx-result"]:checked')).map(el => el.value);
@@ -98,6 +106,7 @@ document.getElementById('btn-submit').addEventListener('click', () => {
     gender: genderEl ? genderEl.value : '',
     success: successEl ? successEl.value : 'Y',
     time: formattedTime,
+    obsTime: formattedObsTime,
     adr: adrEl ? adrEl.value : '',
     bx: bxSelected,
     bxResult: resultSelected,
@@ -122,6 +131,7 @@ function resetForm() {
   document.getElementById('record-form').reset();
   document.getElementById('i-date').value = getTodayDateString();
   document.getElementById('i-time-sec').value = "0";
+  document.getElementById('i-obs-sec').value = "0";
   bxOtherTxt.style.display = 'none';
 }
 
@@ -130,7 +140,6 @@ function saveData() {
   localStorage.setItem('endoTrash', JSON.stringify(trash));
 }
 
-// === 휴지통 비우기 로직 유지 ===
 document.getElementById('btn-empty-trash').addEventListener('click', () => {
   if (trash.length === 0) {
     alert("휴지통이 이미 비어 있습니다.");
@@ -141,6 +150,16 @@ document.getElementById('btn-empty-trash').addEventListener('click', () => {
     saveData();
     renderTrash();
   });
+});
+
+document.getElementById('btn-filter-adr').addEventListener('click', (e) => {
+  isAdrOnlyFilter = !isAdrOnlyFilter;
+  if(isAdrOnlyFilter) {
+    e.target.classList.add('active');
+  } else {
+    e.target.classList.remove('active');
+  }
+  renderList();
 });
 
 document.querySelectorAll('#list-sort-bar .sort-btn').forEach(btn => {
@@ -203,6 +222,13 @@ function sortData(dataArray, sortObj) {
   });
 }
 
+function getFilteredRecords() {
+  if (isAdrOnlyFilter) {
+    return records.filter(r => r.adr === 'Y');
+  }
+  return [...records];
+}
+
 function renderList() {
   const container = document.getElementById('list-container');
   container.innerHTML = '';
@@ -219,11 +245,11 @@ function renderList() {
   }
   document.getElementById('adr-display').textContent = adrText;
 
-  const sortedRecords = sortData(records, listSort);
+  let displayRecords = getFilteredRecords();
+  displayRecords = sortData(displayRecords, listSort);
 
-  sortedRecords.forEach(rec => {
+  displayRecords.forEach(rec => {
     let resBadge = '';
-    // 목록 표시에서 ADR 뱃지는 제외하고 조직검사 결과 뱃지만 표시
     if (rec.bxResult && rec.bxResult.length > 0) {
       if (rec.bxResult.includes('암')) {
         resBadge = `<span class="badge badge-res-cancer">암</span>`;
@@ -313,6 +339,10 @@ function renderDetailForm(record) {
   const timeParts = record.time ? record.time.split(':') : ['', ''];
   const minVal = timeParts[0] || '';
   const secVal = timeParts[1] || '0'; 
+
+  const obsTimeParts = record.obsTime ? record.obsTime.split(':') : ['', ''];
+  const oMinVal = obsTimeParts[0] || '';
+  const oSecVal = obsTimeParts[1] || '0';
   
   detailContentArea.innerHTML = `
     <div class="form-group"><label>날짜</label><input type="date" id="d-date" value="${record.date}" ${dis}></div>
@@ -339,6 +369,12 @@ function renderDetailForm(record) {
       <div class="time-input-group">
         <input type="number" id="d-time-min" value="${minVal}" min="0" placeholder="분" ${dis}><span>분</span>
         <input type="number" id="d-time-sec" value="${secVal}" min="0" max="59" placeholder="초" ${dis}><span>초</span>
+      </div>
+    </div>
+    <div class="form-group"><label>관찰 시간</label>
+      <div class="time-input-group">
+        <input type="number" id="d-obs-min" value="${oMinVal}" min="0" placeholder="분" ${dis}><span>분</span>
+        <input type="number" id="d-obs-sec" value="${oSecVal}" min="0" max="59" placeholder="초" ${dis}><span>초</span>
       </div>
     </div>
     <div class="form-group"><label>ADR 포함 여부</label>
@@ -403,6 +439,7 @@ function setDetailButtons(source) {
         });
       };
 
+      // 삭제 버튼 수정 (정상 작동)
       const btnDel = document.createElement('button');
       btnDel.className = 'btn-delete';
       btnDel.textContent = '삭제하기';
@@ -438,6 +475,10 @@ function setDetailButtons(source) {
           const dMin = document.getElementById('d-time-min').value;
           const dSec = document.getElementById('d-time-sec').value;
           records[idx].time = (dMin || dSec) ? `${dMin || '0'}:${(dSec || '0').padStart(2, '0')}` : '';
+
+          const oMin = document.getElementById('d-obs-min').value;
+          const oSec = document.getElementById('d-obs-sec').value;
+          records[idx].obsTime = (oMin || oSec) ? `${oMin || '0'}:${(oSec || '0').padStart(2, '0')}` : '';
           
           records[idx].adr = document.querySelector('input[name="d-adr"]:checked')?.value || '';
           
@@ -481,14 +522,23 @@ function setDetailButtons(source) {
   }
 }
 
-function exportToExcel() {
-  if (records.length === 0) {
+function exportToExcel(sourceType) {
+  let targetRecords = [];
+  
+  if (sourceType === 'all') {
+    targetRecords = records;
+  } else if (sourceType === 'list') {
+    targetRecords = getFilteredRecords();
+    targetRecords = sortData(targetRecords, listSort); 
+  }
+
+  if (targetRecords.length === 0) {
     alert("내보낼 데이터가 없습니다.");
     return;
   }
   
   showModal('엑셀 파일로 저장/공유하시겠습니까?', () => {
-    const excelData = records.map(rec => {
+    const excelData = targetRecords.map(rec => {
       const resultString = rec.bxResult.join(', ') + (rec.bxResult.includes('기타') ? ` (${rec.bxOtherTxt})` : '');
       return {
         '날짜': rec.date,
@@ -498,6 +548,7 @@ function exportToExcel() {
         '성별': rec.gender,
         '진입성공': rec.success,
         '진입시간': rec.time,
+        '관찰시간': rec.obsTime, 
         'ADR': rec.adr,
         '조직검사': rec.bx.join(', '),
         '결과': resultString,
@@ -529,7 +580,8 @@ function exportToExcel() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "내시경기록");
     
-    const fileName = `내시경기록_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileSuffix = (sourceType === 'list' && isAdrOnlyFilter) ? '_ADR_only' : '';
+    const fileName = `내시경기록_${new Date().toISOString().split('T')[0]}${fileSuffix}.xlsx`;
 
     try {
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -550,10 +602,11 @@ function exportToExcel() {
   });
 }
 
-document.getElementById('btn-export-excel').addEventListener('click', exportToExcel);
-document.getElementById('btn-export-excel-input').addEventListener('click', exportToExcel);
+document.getElementById('btn-export-excel').addEventListener('click', () => exportToExcel('list'));
+document.getElementById('btn-export-excel-input').addEventListener('click', () => exportToExcel('all'));
 
 updateSortUI('list-sort-bar', listSort);
 updateSortUI('trash-sort-bar', trashSort);
 document.getElementById('i-date').value = getTodayDateString();
-document.getElementById('i-time-sec').value = "0";
+document.getElementById('i-time-sec').value = "0"; 
+document.getElementById('i-obs-sec').value = "0";
