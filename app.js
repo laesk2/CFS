@@ -9,8 +9,6 @@ let isEditMode = false;
 
 let isAdrOnlyFilter = false;
 
-// === 모달 팝업창 버그 수정 ===
-// 모달 요소를 함수 내부에서 매번 새로 찾도록 변경하여 '예/아니요' 클릭 이벤트가 정상 작동하게 합니다.
 function showModal(message, onYes) {
   const modal = document.getElementById('modal-overlay');
   const modalMsg = document.getElementById('modal-msg');
@@ -65,9 +63,11 @@ tabBtns.forEach(btn => {
 
 const bxOtherChk = document.getElementById('i-res-5');
 const bxOtherTxt = document.getElementById('i-bx-result-other-txt');
-bxOtherChk.addEventListener('change', (e) => {
-  bxOtherTxt.style.display = e.target.checked ? 'block' : 'none';
-});
+if(bxOtherChk) {
+  bxOtherChk.addEventListener('change', (e) => {
+    bxOtherTxt.style.display = e.target.checked ? 'block' : 'none';
+  });
+}
 
 document.getElementById('btn-submit').addEventListener('click', () => {
   const date = document.getElementById('i-date').value;
@@ -132,7 +132,7 @@ function resetForm() {
   document.getElementById('i-date').value = getTodayDateString();
   document.getElementById('i-time-sec').value = "0";
   document.getElementById('i-obs-sec').value = "0";
-  bxOtherTxt.style.display = 'none';
+  if(bxOtherTxt) bxOtherTxt.style.display = 'none';
 }
 
 function saveData() {
@@ -439,7 +439,6 @@ function setDetailButtons(source) {
         });
       };
 
-      // 삭제 버튼 수정 (정상 작동)
       const btnDel = document.createElement('button');
       btnDel.className = 'btn-delete';
       btnDel.textContent = '삭제하기';
@@ -522,6 +521,7 @@ function setDetailButtons(source) {
   }
 }
 
+// === 엑셀 다운로드 기능 재수정 ===
 function exportToExcel(sourceType) {
   let targetRecords = [];
   
@@ -538,65 +538,42 @@ function exportToExcel(sourceType) {
   }
   
   showModal('엑셀 파일로 저장/공유하시겠습니까?', () => {
-    const excelData = targetRecords.map(rec => {
-      const resultString = rec.bxResult.join(', ') + (rec.bxResult.includes('기타') ? ` (${rec.bxOtherTxt})` : '');
-      return {
-        '날짜': rec.date,
-        '이름': rec.name,
-        '등록번호': rec.id,
-        '나이': rec.age,
-        '성별': rec.gender,
-        '진입성공': rec.success,
-        '진입시간': rec.time,
-        '관찰시간': rec.obsTime, 
-        'ADR': rec.adr,
-        '조직검사': rec.bx.join(', '),
-        '결과': resultString,
-        '검사소견': rec.findings,
-        '비고': rec.note,
-        '최초입력': formatDateString(rec.createdAt),
-        '마지막수정': formatDateString(rec.updatedAt)
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-    const range = XLSX.utils.decode_range(worksheet['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = {c: C, r: R};
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
-        const cell = worksheet[cell_ref];
-
-        if (cell && cell.v) {
-          const val = cell.v.toString();
-          if (val.includes('암') || val.includes('선종')) {
-            cell.s = { font: { color: { rgb: "FF0000" } } };
-          }
-        }
-      }
-    }
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "내시경기록");
-    
-    const fileSuffix = (sourceType === 'list' && isAdrOnlyFilter) ? '_ADR_only' : '';
-    const fileName = `내시경기록_${new Date().toISOString().split('T')[0]}${fileSuffix}.xlsx`;
-
     try {
-      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const file = new File([blob], fileName, { type: blob.type });
+      const excelData = targetRecords.map(rec => {
+        const resultString = rec.bxResult ? rec.bxResult.join(', ') + (rec.bxResult.includes('기타') ? ` (${rec.bxOtherTxt || ''})` : '') : '';
+        return {
+          '날짜': rec.date,
+          '이름': rec.name,
+          '등록번호': rec.id,
+          '나이': rec.age,
+          '성별': rec.gender,
+          '진입성공': rec.success,
+          '진입시간': rec.time,
+          '관찰시간': rec.obsTime, 
+          'ADR': rec.adr,
+          '조직검사': rec.bx ? rec.bx.join(', ') : '',
+          '결과': resultString,
+          '검사소견': rec.findings,
+          '비고': rec.note,
+          '최초입력': formatDateString(rec.createdAt),
+          '마지막수정': formatDateString(rec.updatedAt)
+        };
+      });
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({
-          files: [file],
-          title: '내시경 기록 데이터'
-        }).catch(err => console.log("공유 취소됨:", err));
-      } else {
-        XLSX.writeFile(workbook, fileName);
-      }
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // 색상 처리 로직은 모바일/PC 호환성 이슈로 인해 제거 후 기본 파일 저장으로 안정성 확보
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "내시경기록");
+      
+      const fileSuffix = (sourceType === 'list' && isAdrOnlyFilter) ? '_ADR_only' : '';
+      const fileName = `내시경기록_${new Date().toISOString().split('T')[0]}${fileSuffix}.xlsx`;
+
+      // 브라우저 네이티브 다운로드 방식 적용 (가장 호환성이 높음)
+      XLSX.writeFile(workbook, fileName);
+
     } catch (e) {
+      console.error(e);
       alert("엑셀 생성 중 오류가 발생했습니다: " + e.message);
     }
   });
