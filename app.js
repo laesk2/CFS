@@ -130,14 +130,14 @@ function saveData() {
   localStorage.setItem('endoTrash', JSON.stringify(trash));
 }
 
-// === 휴지통 비우기 로직 추가 ===
+// === 휴지통 비우기 로직 유지 ===
 document.getElementById('btn-empty-trash').addEventListener('click', () => {
   if (trash.length === 0) {
     alert("휴지통이 이미 비어 있습니다.");
     return;
   }
   showModal('휴지통을 비우시겠습니까?', () => {
-    trash = []; // 휴지통 데이터 초기화
+    trash = []; 
     saveData();
     renderTrash();
   });
@@ -222,14 +222,8 @@ function renderList() {
   const sortedRecords = sortData(records, listSort);
 
   sortedRecords.forEach(rec => {
-    let adrBadge = '';
-    if (rec.adr === 'Y') {
-      adrBadge = `<span class="badge badge-adr-y">ADR</span>`;
-    } else if (rec.adr === 'N') {
-      adrBadge = `<span class="badge badge-adr-n">ADR N</span>`;
-    }
-
     let resBadge = '';
+    // 목록 표시에서 ADR 뱃지는 제외하고 조직검사 결과 뱃지만 표시
     if (rec.bxResult && rec.bxResult.length > 0) {
       if (rec.bxResult.includes('암')) {
         resBadge = `<span class="badge badge-res-cancer">암</span>`;
@@ -250,7 +244,6 @@ function renderList() {
       <div class="list-item-body">
         <span>ID: ${rec.id} | 나이: ${rec.age}</span>
         <div style="margin-left: auto;">
-          ${adrBadge}
           ${resBadge}
         </div>
       </div>
@@ -488,7 +481,6 @@ function setDetailButtons(source) {
   }
 }
 
-// === 공통 엑셀 다운로드 함수 ===
 function exportToExcel() {
   if (records.length === 0) {
     alert("내보낼 데이터가 없습니다.");
@@ -518,7 +510,6 @@ function exportToExcel() {
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-    // 셀 순회하며 '암' 또는 '선종'이 포함된 경우 폰트 색상을 빨간색으로 변경
     const range = XLSX.utils.decode_range(worksheet['!ref']);
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -559,7 +550,6 @@ function exportToExcel() {
   });
 }
 
-// 두 곳의 엑셀 버튼에 이벤트 리스너 연결
 document.getElementById('btn-export-excel').addEventListener('click', exportToExcel);
 document.getElementById('btn-export-excel-input').addEventListener('click', exportToExcel);
 
