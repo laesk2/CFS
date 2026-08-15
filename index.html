@@ -46,17 +46,13 @@
           <label for="i-s-n">N</label>
         </div>
       </div>
-      
-      <!-- 수정된 진입 시간 영역 -->
       <div class="form-group">
         <label>진입 시간</label>
         <div class="time-input-group">
           <input type="number" id="i-time-min" min="0" placeholder="분"><span>분</span>
-          <input type="number" id="i-time-sec" min="0" max="59" placeholder="초"><span>초</span>
+          <input type="number" id="i-time-sec" min="0" max="59" value="0"><span>초</span>
         </div>
       </div>
-      
-      <!-- 수정된 ADR 포함 여부 영역 -->
       <div class="form-group">
         <label>ADR 포함 여부</label>
         <div class="radio-group">
@@ -66,25 +62,32 @@
           <label for="i-a-n">N</label>
         </div>
       </div>
-
       <div class="form-group">
         <label>조직검사 시행 여부</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="i-bx" value="Bx"> Bx</label>
-          <label><input type="checkbox" name="i-bx" value="CSP"> CSP</label>
-          <label><input type="checkbox" name="i-bx" value="EMR"> EMR</label>
+        <div class="multi-btn-group">
+          <input type="checkbox" id="i-bx-1" name="i-bx" value="Bx">
+          <label for="i-bx-1">Bx</label>
+          <input type="checkbox" id="i-bx-2" name="i-bx" value="CSP">
+          <label for="i-bx-2">CSP</label>
+          <input type="checkbox" id="i-bx-3" name="i-bx" value="EMR">
+          <label for="i-bx-3">EMR</label>
         </div>
       </div>
       <div class="form-group">
         <label>조직검사 결과</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="i-bx-result" value="양성"> 양성</label>
-          <label><input type="checkbox" name="i-bx-result" value="선종"> 선종</label>
-          <label><input type="checkbox" name="i-bx-result" value="암"> 암</label>
-          <label><input type="checkbox" name="i-bx-result" value="pending"> pending</label>
-          <label><input type="checkbox" name="i-bx-result" id="i-bx-result-other-chk" value="기타"> 기타</label>
+        <div class="multi-btn-group">
+          <input type="checkbox" id="i-res-1" name="i-bx-result" value="양성">
+          <label for="i-res-1">양성</label>
+          <input type="checkbox" id="i-res-2" name="i-bx-result" value="선종">
+          <label for="i-res-2">선종</label>
+          <input type="checkbox" id="i-res-3" name="i-bx-result" value="암">
+          <label for="i-res-3">암</label>
+          <input type="checkbox" id="i-res-4" name="i-bx-result" value="pending">
+          <label for="i-res-4">pending</label>
+          <input type="checkbox" id="i-res-5" name="i-bx-result" value="기타">
+          <label for="i-res-5">기타</label>
         </div>
-        <input type="text" id="i-bx-result-other-txt" placeholder="기타 결과 입력" style="display:none; margin-top:5px;">
+        <input type="text" id="i-bx-result-other-txt" placeholder="기타 결과 입력" style="display:none; margin-top:10px;">
       </div>
       <div class="form-group">
         <label>검사소견</label>
@@ -94,7 +97,6 @@
         <label>비고</label>
         <textarea id="i-note" rows="2"></textarea>
       </div>
-      
       <div class="button-group bottom-buttons">
         <button type="button" id="btn-reset" class="btn-secondary">초기화</button>
         <button type="button" id="btn-submit" class="btn-primary">완료</button>
@@ -102,12 +104,17 @@
     </form>
   </div>
 
+  <!-- 목록 탭 화면 -->
   <div id="view-list" class="view">
     <div class="header-action">
-      <h2>목록</h2>
+      <!-- ADR 수치를 보여줄 공간 추가 -->
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <h2>목록</h2>
+        <span id="adr-display" style="font-weight: 700; color: #ff3b30; font-size: 16px;">ADR --%</span>
+      </div>
       <button id="btn-export-excel" class="btn-small">엑셀</button>
     </div>
-    <div class="sort-bar">
+    <div class="sort-bar" id="list-sort-bar">
       <span class="sort-btn" data-sort="date">날짜 ▼</span>
       <span class="sort-btn" data-sort="name">이름</span>
       <span class="sort-btn" data-sort="id">등록번호</span>
@@ -118,12 +125,18 @@
 
   <div id="view-trash" class="view">
     <h2>휴지통</h2>
+    <div class="sort-bar" id="trash-sort-bar">
+      <span class="sort-btn" data-sort="date">날짜 ▼</span>
+      <span class="sort-btn" data-sort="name">이름</span>
+      <span class="sort-btn" data-sort="id">등록번호</span>
+      <span class="sort-btn" data-sort="age">나이</span>
+    </div>
     <div id="trash-container" class="list-container"></div>
   </div>
 
   <div id="view-detail" class="view full-screen">
     <div class="detail-header">
-      <button id="btn-detail-back" class="btn-text">◀ 목록</button>
+      <button id="btn-detail-back" class="btn-text">◀ 이전</button>
       <span id="detail-title">상세 보기</span>
     </div>
     <div class="detail-content" id="detail-content-area"></div>

@@ -1,6 +1,9 @@
 let records = JSON.parse(localStorage.getItem('endoRecords')) || [];
 let trash = JSON.parse(localStorage.getItem('endoTrash')) || [];
-let currentSort = { key: 'date', order: 'desc' }; 
+
+let listSort = { key: 'date', order: 'desc' }; 
+let trashSort = { key: 'date', order: 'desc' }; 
+
 let currentDetailId = null;
 let isEditMode = false;
 
@@ -28,29 +31,40 @@ function showModal(message, onYes) {
   });
 }
 
+function getTodayDateString() {
+  const now = new Date();
+  const kst = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  return kst.toISOString().split('T')[0];
+}
+
 const views = document.querySelectorAll('.view');
 const tabBtns = document.querySelectorAll('.tab-btn');
 
+function switchTab(targetId) {
+  tabBtns.forEach(btn => {
+    if(btn.dataset.target === targetId) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+  
+  views.forEach(v => v.classList.remove('active'));
+  document.getElementById(targetId).classList.add('active');
+  
+  if(targetId === 'view-list') renderList();
+  if(targetId === 'view-trash') renderTrash();
+}
+
 tabBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    tabBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    
-    views.forEach(v => v.classList.remove('active'));
-    document.getElementById(btn.dataset.target).classList.add('active');
-    
-    if(btn.dataset.target === 'view-list') renderList();
-    if(btn.dataset.target === 'view-trash') renderTrash();
+    switchTab(btn.dataset.target);
   });
 });
 
-const bxOtherChk = document.getElementById('i-bx-result-other-chk');
+const bxOtherChk = document.getElementById('i-res-5');
 const bxOtherTxt = document.getElementById('i-bx-result-other-txt');
 bxOtherChk.addEventListener('change', (e) => {
   bxOtherTxt.style.display = e.target.checked ? 'block' : 'none';
 });
 
-// 데이터 저장 
 document.getElementById('btn-submit').addEventListener('click', () => {
   const date = document.getElementById('i-date').value;
   const name = document.getElementById('i-name').value;
@@ -66,7 +80,6 @@ document.getElementById('btn-submit').addEventListener('click', () => {
   const successEl = document.querySelector('input[name="i-success"]:checked');
   const adrEl = document.querySelector('input[name="i-adr"]:checked');
   
-  // 분, 초 조합
   const tMin = document.getElementById('i-time-min').value;
   const tSec = document.getElementById('i-time-sec').value;
   const formattedTime = (tMin || tSec) ? `${tMin || '0'}:${(tSec || '0').padStart(2, '0')}` : '';
@@ -107,6 +120,8 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 function resetForm() {
   document.getElementById('record-form').reset();
+  document.getElementById('i-date').value = getTodayDateString();
+  document.getElementById('i-time-sec').value = "0";
   bxOtherTxt.style.display = 'none';
 }
 
@@ -115,40 +130,51 @@ function saveData() {
   localStorage.setItem('endoTrash', JSON.stringify(trash));
 }
 
-document.querySelectorAll('.sort-btn').forEach(btn => {
+document.querySelectorAll('#list-sort-bar .sort-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const key = btn.dataset.sort;
-    if (currentSort.key === key) {
-      currentSort.order = currentSort.order === 'desc' ? 'asc' : 'desc';
+    if (listSort.key === key) {
+      listSort.order = listSort.order === 'desc' ? 'asc' : 'desc';
     } else {
-      currentSort.key = key;
-      currentSort.order = 'desc'; 
+      listSort.key = key;
+      listSort.order = 'desc'; 
     }
-    updateSortUI();
+    updateSortUI('list-sort-bar', listSort);
     renderList();
   });
 });
 
-function updateSortUI() {
-  document.querySelectorAll('.sort-btn').forEach(btn => {
+document.querySelectorAll('#trash-sort-bar .sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.sort;
+    if (trashSort.key === key) {
+      trashSort.order = trashSort.order === 'desc' ? 'asc' : 'desc';
+    } else {
+      trashSort.key = key;
+      trashSort.order = 'desc'; 
+    }
+    updateSortUI('trash-sort-bar', trashSort);
+    renderTrash();
+  });
+});
+
+function updateSortUI(barId, sortObj) {
+  document.querySelectorAll(`#${barId} .sort-btn`).forEach(btn => {
     const originalText = btn.textContent.replace(/[▼▲]/g, '').trim();
-    if (btn.dataset.sort === currentSort.key) {
-      btn.textContent = `${originalText} ${currentSort.order === 'desc' ? '▼' : '▲'}`;
+    if (btn.dataset.sort === sortObj.key) {
+      btn.textContent = `${originalText} ${sortObj.order === 'desc' ? '▼' : '▲'}`;
     } else {
       btn.textContent = originalText;
     }
   });
 }
 
-function renderList() {
-  const container = document.getElementById('list-container');
-  container.innerHTML = '';
-
-  let sortedRecords = [...records].sort((a, b) => {
-    let valA = a[currentSort.key];
-    let valB = b[currentSort.key];
+function sortData(dataArray, sortObj) {
+  return [...dataArray].sort((a, b) => {
+    let valA = a[sortObj.key];
+    let valB = b[sortObj.key];
     
-    if (currentSort.key === 'id' || currentSort.key === 'age') {
+    if (sortObj.key === 'id' || sortObj.key === 'age') {
       valA = Number(valA); valB = Number(valB);
     }
     
@@ -156,14 +182,53 @@ function renderList() {
     if (valA > valB) comparison = 1;
     else if (valA < valB) comparison = -1;
     
-    if (comparison === 0 && currentSort.key === 'date') {
+    if (comparison === 0 && sortObj.key === 'date') {
       comparison = a.createdAt > b.createdAt ? 1 : -1;
     }
 
-    return currentSort.order === 'desc' ? comparison * -1 : comparison;
+    return sortObj.order === 'desc' ? comparison * -1 : comparison;
   });
+}
+
+function renderList() {
+  const container = document.getElementById('list-container');
+  container.innerHTML = '';
+
+  // === ADR 실시간 계산 ===
+  const adrTargetRecords = records.filter(r => r.adr === 'Y');
+  let adrText = "ADR --%";
+  
+  if (adrTargetRecords.length > 0) {
+    const adrPositiveRecords = adrTargetRecords.filter(r => 
+      r.bxResult && (r.bxResult.includes('선종') || r.bxResult.includes('암'))
+    );
+    const adrRate = (adrPositiveRecords.length / adrTargetRecords.length) * 100;
+    adrText = `ADR ${adrRate.toFixed(1)}%`; // 소수점 첫째 자리까지 표시
+  }
+  document.getElementById('adr-display').textContent = adrText;
+  // ======================
+
+  const sortedRecords = sortData(records, listSort);
 
   sortedRecords.forEach(rec => {
+    let adrBadge = '';
+    if (rec.adr === 'Y') {
+      adrBadge = `<span class="badge badge-adr-y">ADR</span>`;
+    } else if (rec.adr === 'N') {
+      adrBadge = `<span class="badge badge-adr-n">ADR N</span>`;
+    }
+
+    let resBadge = '';
+    if (rec.bxResult && rec.bxResult.length > 0) {
+      if (rec.bxResult.includes('암')) {
+        resBadge = `<span class="badge badge-res-cancer">암</span>`;
+      } else if (rec.bxResult.includes('선종')) {
+        resBadge = `<span class="badge badge-res-adenoma">선종</span>`;
+      } else if (rec.bxResult.includes('pending')) {
+        resBadge = `<span class="badge badge-res-pending">pending</span>`;
+      }
+    }
+
     const div = document.createElement('div');
     div.className = 'list-item';
     div.innerHTML = `
@@ -172,7 +237,11 @@ function renderList() {
         <span>${rec.name} (${rec.gender || '-'})</span>
       </div>
       <div class="list-item-body">
-        등록번호: ${rec.id} | 나이: ${rec.age}
+        <span>ID: ${rec.id} | 나이: ${rec.age}</span>
+        <div style="margin-left: auto;">
+          ${adrBadge}
+          ${resBadge}
+        </div>
       </div>
     `;
     div.addEventListener('click', () => openDetail(rec, 'list'));
@@ -183,13 +252,19 @@ function renderList() {
 function renderTrash() {
   const container = document.getElementById('trash-container');
   container.innerHTML = '';
-  trash.forEach(rec => {
+
+  const sortedTrash = sortData(trash, trashSort);
+
+  sortedTrash.forEach(rec => {
     const div = document.createElement('div');
     div.className = 'list-item';
     div.innerHTML = `
       <div class="list-item-header">
         <span>${rec.date}</span>
-        <span>${rec.name}</span>
+        <span>${rec.name} (${rec.gender || '-'})</span>
+      </div>
+      <div class="list-item-body">
+        등록번호: ${rec.id} | 나이: ${rec.age}
       </div>
     `;
     div.addEventListener('click', () => openDetail(rec, 'trash'));
@@ -231,10 +306,9 @@ function renderDetailForm(record) {
   const bxArr = record.bx || [];
   const resArr = record.bxResult || [];
   
-  // 저장된 MM:SS 분리
   const timeParts = record.time ? record.time.split(':') : ['', ''];
   const minVal = timeParts[0] || '';
-  const secVal = timeParts[1] || '';
+  const secVal = timeParts[1] || '0'; 
   
   detailContentArea.innerHTML = `
     <div class="form-group"><label>날짜</label><input type="date" id="d-date" value="${record.date}" ${dis}></div>
@@ -272,21 +346,29 @@ function renderDetailForm(record) {
       </div>
     </div>
     <div class="form-group"><label>조직검사 시행 여부</label>
-      <div class="checkbox-group">
-        <label><input type="checkbox" id="d-bx-Bx" value="Bx" ${bxArr.includes('Bx')?'checked':''} ${dis}> Bx</label>
-        <label><input type="checkbox" id="d-bx-CSP" value="CSP" ${bxArr.includes('CSP')?'checked':''} ${dis}> CSP</label>
-        <label><input type="checkbox" id="d-bx-EMR" value="EMR" ${bxArr.includes('EMR')?'checked':''} ${dis}> EMR</label>
+      <div class="multi-btn-group">
+        <input type="checkbox" id="d-bx-1" name="d-bx" value="Bx" ${bxArr.includes('Bx')?'checked':''} ${dis}>
+        <label for="d-bx-1">Bx</label>
+        <input type="checkbox" id="d-bx-2" name="d-bx" value="CSP" ${bxArr.includes('CSP')?'checked':''} ${dis}>
+        <label for="d-bx-2">CSP</label>
+        <input type="checkbox" id="d-bx-3" name="d-bx" value="EMR" ${bxArr.includes('EMR')?'checked':''} ${dis}>
+        <label for="d-bx-3">EMR</label>
       </div>
     </div>
     <div class="form-group"><label>조직검사 결과</label>
-      <div class="checkbox-group">
-        <label><input type="checkbox" id="d-res-1" value="양성" ${resArr.includes('양성')?'checked':''} ${dis}> 양성</label>
-        <label><input type="checkbox" id="d-res-2" value="선종" ${resArr.includes('선종')?'checked':''} ${dis}> 선종</label>
-        <label><input type="checkbox" id="d-res-3" value="암" ${resArr.includes('암')?'checked':''} ${dis}> 암</label>
-        <label><input type="checkbox" id="d-res-4" value="pending" ${resArr.includes('pending')?'checked':''} ${dis}> pending</label>
-        <label><input type="checkbox" id="d-res-5" value="기타" ${resArr.includes('기타')?'checked':''} ${dis}> 기타</label>
+      <div class="multi-btn-group">
+        <input type="checkbox" id="d-res-1" name="d-bx-result" value="양성" ${resArr.includes('양성')?'checked':''} ${dis}>
+        <label for="d-res-1">양성</label>
+        <input type="checkbox" id="d-res-2" name="d-bx-result" value="선종" ${resArr.includes('선종')?'checked':''} ${dis}>
+        <label for="d-res-2">선종</label>
+        <input type="checkbox" id="d-res-3" name="d-bx-result" value="암" ${resArr.includes('암')?'checked':''} ${dis}>
+        <label for="d-res-3">암</label>
+        <input type="checkbox" id="d-res-4" name="d-bx-result" value="pending" ${resArr.includes('pending')?'checked':''} ${dis}>
+        <label for="d-res-4">pending</label>
+        <input type="checkbox" id="d-res-5" name="d-bx-result" value="기타" ${resArr.includes('기타')?'checked':''} ${dis}>
+        <label for="d-res-5">기타</label>
       </div>
-      <input type="text" id="d-res-txt" value="${record.bxOtherTxt || ''}" style="display:${resArr.includes('기타')||isEditMode?'block':'none'}; margin-top:5px;" ${dis}>
+      <input type="text" id="d-res-txt" value="${record.bxOtherTxt || ''}" style="display:${resArr.includes('기타')||isEditMode?'block':'none'}; margin-top:10px;" ${dis}>
     </div>
     <div class="form-group"><label>검사소견</label><textarea id="d-findings" rows="3" ${dis}>${record.findings}</textarea></div>
     <div class="form-group"><label>비고</label><textarea id="d-note" rows="2" ${dis}>${record.note}</textarea></div>
@@ -355,19 +437,8 @@ function setDetailButtons(source) {
           
           records[idx].adr = document.querySelector('input[name="d-adr"]:checked')?.value || '';
           
-          const bx = [];
-          if(document.getElementById('d-bx-Bx').checked) bx.push('Bx');
-          if(document.getElementById('d-bx-CSP').checked) bx.push('CSP');
-          if(document.getElementById('d-bx-EMR').checked) bx.push('EMR');
-          records[idx].bx = bx;
-
-          const res = [];
-          if(document.getElementById('d-res-1').checked) res.push('양성');
-          if(document.getElementById('d-res-2').checked) res.push('선종');
-          if(document.getElementById('d-res-3').checked) res.push('암');
-          if(document.getElementById('d-res-4').checked) res.push('pending');
-          if(document.getElementById('d-res-5').checked) res.push('기타');
-          records[idx].bxResult = res;
+          records[idx].bx = Array.from(document.querySelectorAll('input[name="d-bx"]:checked')).map(el => el.value);
+          records[idx].bxResult = Array.from(document.querySelectorAll('input[name="d-bx-result"]:checked')).map(el => el.value);
           records[idx].bxOtherTxt = document.getElementById('d-res-txt').value;
 
           records[idx].findings = document.getElementById('d-findings').value;
@@ -395,7 +466,10 @@ function setDetailButtons(source) {
           records.push(trash[idx]);
           trash.splice(idx, 1);
           saveData();
-          document.getElementById('btn-detail-back').click();
+          
+          viewDetail.classList.remove('active');
+          isEditMode = false;
+          switchTab('view-list'); 
         }
       });
     };
@@ -452,4 +526,7 @@ document.getElementById('btn-export-excel').addEventListener('click', () => {
   });
 });
 
-updateSortUI();
+updateSortUI('list-sort-bar', listSort);
+updateSortUI('trash-sort-bar', trashSort);
+document.getElementById('i-date').value = getTodayDateString();
+document.getElementById('i-time-sec').value = "0";
