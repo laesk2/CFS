@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>내시경 기록 관리</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- 입력 탭 화면 -->
+  <div id="view-input" class="view active">
+    <h2>새 기록 입력</h2>
+    <form id="record-form">
+      <div class="form-group">
+        <label>날짜</label>
+        <input type="date" id="i-date" required>
+      </div>
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="i-name" required>
+      </div>
+      <div class="form-group">
+        <label>등록번호 (숫자, 최대 8자리)</label>
+        <input type="number" id="i-id" max="99999999" required>
+      </div>
+      <div class="form-group">
+        <label>나이</label>
+        <input type="number" id="i-age" required>
+      </div>
+      <div class="form-group">
+        <label>성별</label>
+        <div class="radio-group">
+          <input type="radio" id="i-g-m" name="i-gender" value="M">
+          <label for="i-g-m">M</label>
+          <input type="radio" id="i-g-f" name="i-gender" value="F">
+          <label for="i-g-f">F</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>진입 성공 여부</label>
+        <div class="radio-group">
+          <input type="radio" id="i-s-y" name="i-success" value="Y" checked>
+          <label for="i-s-y">Y</label>
+          <input type="radio" id="i-s-n" name="i-success" value="N">
+          <label for="i-s-n">N</label>
+        </div>
+      </div>
+      
+      <!-- 수정된 진입 시간 영역 -->
+      <div class="form-group">
+        <label>진입 시간</label>
+        <div class="time-input-group">
+          <input type="number" id="i-time-min" min="0" placeholder="분"><span>분</span>
+          <input type="number" id="i-time-sec" min="0" max="59" placeholder="초"><span>초</span>
+        </div>
+      </div>
+      
+      <!-- 수정된 ADR 포함 여부 영역 -->
+      <div class="form-group">
+        <label>ADR 포함 여부</label>
+        <div class="radio-group">
+          <input type="radio" id="i-a-y" name="i-adr" value="Y">
+          <label for="i-a-y">Y</label>
+          <input type="radio" id="i-a-n" name="i-adr" value="N">
+          <label for="i-a-n">N</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>조직검사 시행 여부</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="i-bx" value="Bx"> Bx</label>
+          <label><input type="checkbox" name="i-bx" value="CSP"> CSP</label>
+          <label><input type="checkbox" name="i-bx" value="EMR"> EMR</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>조직검사 결과</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="i-bx-result" value="양성"> 양성</label>
+          <label><input type="checkbox" name="i-bx-result" value="선종"> 선종</label>
+          <label><input type="checkbox" name="i-bx-result" value="암"> 암</label>
+          <label><input type="checkbox" name="i-bx-result" value="pending"> pending</label>
+          <label><input type="checkbox" name="i-bx-result" id="i-bx-result-other-chk" value="기타"> 기타</label>
+        </div>
+        <input type="text" id="i-bx-result-other-txt" placeholder="기타 결과 입력" style="display:none; margin-top:5px;">
+      </div>
+      <div class="form-group">
+        <label>검사소견</label>
+        <textarea id="i-findings" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>비고</label>
+        <textarea id="i-note" rows="2"></textarea>
+      </div>
+      
+      <div class="button-group bottom-buttons">
+        <button type="button" id="btn-reset" class="btn-secondary">초기화</button>
+        <button type="button" id="btn-submit" class="btn-primary">완료</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="view-list" class="view">
+    <div class="header-action">
+      <h2>목록</h2>
+      <button id="btn-export-excel" class="btn-small">엑셀</button>
+    </div>
+    <div class="sort-bar">
+      <span class="sort-btn" data-sort="date">날짜 ▼</span>
+      <span class="sort-btn" data-sort="name">이름</span>
+      <span class="sort-btn" data-sort="id">등록번호</span>
+      <span class="sort-btn" data-sort="age">나이</span>
+    </div>
+    <div id="list-container" class="list-container"></div>
+  </div>
+
+  <div id="view-trash" class="view">
+    <h2>휴지통</h2>
+    <div id="trash-container" class="list-container"></div>
+  </div>
+
+  <div id="view-detail" class="view full-screen">
+    <div class="detail-header">
+      <button id="btn-detail-back" class="btn-text">◀ 목록</button>
+      <span id="detail-title">상세 보기</span>
+    </div>
+    <div class="detail-content" id="detail-content-area"></div>
+    <div class="detail-timestamps">
+      <div id="d-created-at"></div>
+      <div id="d-updated-at"></div>
+    </div>
+    <div class="button-group detail-buttons" id="detail-action-buttons"></div>
+  </div>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-target="view-input">입력</button>
+    <button class="tab-btn" data-target="view-list">목록</button>
+    <button class="tab-btn" data-target="view-trash">휴지통</button>
+  </nav>
+
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal-box">
+      <p id="modal-msg"></p>
+      <div class="modal-buttons">
+        <button id="modal-btn-no" class="btn-secondary">아니요</button>
+        <button id="modal-btn-yes" class="btn-primary">예</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

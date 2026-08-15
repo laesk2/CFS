@@ -1,0 +1,105 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #f2f2f7; 
+  color: #000;
+  padding-bottom: 70px; 
+}
+
+.view { display: none; padding: 20px; }
+.view.active { display: block; }
+h2 { margin-bottom: 20px; font-size: 24px; font-weight: bold; }
+
+.form-group {
+  margin-bottom: 15px;
+  background: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.form-group label {
+  display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #333;
+}
+input[type="text"], input[type="date"], input[type="number"], select, textarea {
+  width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px;
+}
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.checkbox-group label { font-weight: normal; display: flex; align-items: center; gap: 5px; }
+
+.radio-group { display: flex; gap: 10px; }
+.radio-group input[type="radio"] { display: none; }
+.radio-group label {
+  flex: 1; text-align: center; padding: 12px; background: #e5e5ea;
+  border-radius: 6px; font-weight: bold; color: #333; cursor: pointer;
+  transition: all 0.2s;
+}
+.radio-group input[type="radio"]:checked + label {
+  background: #007aff; color: #fff;
+}
+.radio-group input[type="radio"]:disabled + label { opacity: 0.6; cursor: not-allowed; }
+
+/* === 분/초 입력 폼 그룹 스타일 추가 === */
+.time-input-group {
+  display: flex; gap: 8px; align-items: center;
+}
+.time-input-group input {
+  flex: 1; text-align: center;
+}
+.time-input-group span {
+  font-size: 14px; font-weight: bold; color: #666; white-space: nowrap;
+}
+
+.button-group { display: flex; gap: 10px; margin-top: 20px; }
+button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; }
+.btn-primary { background-color: #007aff; color: white; } 
+.btn-secondary { background-color: #e5e5ea; color: #000; } 
+.btn-edit { background-color: #34c759; color: white; } 
+.btn-delete { background-color: #ff3b30; color: white; } 
+.btn-small { flex: none; padding: 6px 12px; font-size: 14px; }
+.btn-text { background: none; color: #007aff; padding: 0; flex: none; }
+
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+  background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+  display: flex; border-top: 1px solid #ddd; z-index: 100;
+}
+.tab-btn { flex: 1; background: none; border: none; border-radius: 0; color: #8e8e93; font-size: 16px; }
+.tab-btn.active { color: #007aff; }
+
+.sort-bar {
+  display: flex; justify-content: space-between; background: #fff; padding: 10px;
+  border-radius: 8px; margin-bottom: 10px; font-size: 14px; font-weight: 600;
+}
+.sort-btn { flex: 1; text-align: center; color: #007aff; }
+.list-item {
+  background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+}
+.list-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold;}
+.list-item-body { color: #666; font-size: 14px; }
+
+.full-screen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #f2f2f7; z-index: 200; overflow-y: auto; padding-bottom: 30px;
+}
+.detail-header {
+  display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #ccc; margin-bottom: 20px;
+}
+#detail-title { margin-left: 20px; font-weight: bold; font-size: 18px; }
+.detail-timestamps { font-size: 12px; color: #8e8e93; text-align: center; margin-top: 20px; }
+.header-action { display: flex; justify-content: space-between; align-items: center; }
+
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 300; justify-content: center; align-items: center;
+}
+.modal-box {
+  background: #fff; padding: 25px; border-radius: 15px; width: 80%; max-width: 300px; text-align: center;
+}
+.modal-box p { margin-bottom: 20px; font-size: 16px; font-weight: bold; }
+.modal-buttons { display: flex; gap: 10px; }
